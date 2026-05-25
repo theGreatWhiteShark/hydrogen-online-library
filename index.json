@@ -1,0 +1,69 @@
+{
+  "version": "0.1.0",
+  "created": "2026-05-25T17:19:59",
+  "patternCount": 1,
+  "songCount": 1,
+  "drumkitCount": 1,
+  "patterns": [
+    {
+      "type": "pattern",
+      "name": "Slow 1",
+      "url": "https://raw.githubusercontent.com/theGreatWhiteShark/hydrogen-online-library/library/patterns/slow-01.h2pattern",
+      "hash": "dd01ced04cf27892c5d64918826f50ae7896a5d3dbf4a775eafbdda6db59e17f",
+      "author": "Albert Phelipot",
+      "description": "Transcribed from the book \"260 Drum Machine Patterns\" by René-Pierre Bardet.",
+      "version": 0,
+      "formatVersion": 2,
+      "tags": [
+        "Slow",
+        "Minimal",
+        "260 Drum Machine Patterns"
+      ],
+      "size": 5212,
+      "license": "CC BY-SA",
+      "notes": 16,
+      "instrumentTypes": [
+        "Hi-hat Closed",
+        "Kick",
+        "Snare"
+      ]
+    }
+  ],
+  "songs": [
+    {
+      "type": "song",
+      "name": "TR-808 Emulation Kit demo",
+      "url": "https://raw.githubusercontent.com/theGreatWhiteShark/hydrogen-online-library/library/songs/TR808kit-demo.h2song",
+      "hash": "03bf878e9c399f328bbdba90ba4a59e0a802ee9b3905007f3237cc2231f32475",
+      "author": "ArtemioLabs",
+      "description": "Demo patterns for the TR-808 Emulation Kit.",
+      "version": 0,
+      "formatVersion": 0,
+      "tags": [],
+      "size": 49377,
+      "license": "Unknown license",
+      "patterns": 10
+    }
+  ],
+  "drumkits": [
+    {
+      "type": "drumkit",
+      "name": "Ian Paice",
+      "url": "https://raw.githubusercontent.com/theGreatWhiteShark/hydrogen-online-library/library/drumkits/Ian Paice.h2drumkit",
+      "hash": "32e7ded5b76e5da9c732139d5c2fe169f0614333196957f43ab514991b492a2d",
+      "author": "Guilherme Passos",
+      "description": "\u003c!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"\u003e\r\n\u003chtml\u003e\u003chead\u003e\u003cmeta name=\"qrichtext\" content=\"1\" /\u003e\u003cstyle type=\"text/css\"\u003e\r\np, li { white-space: pre-wrap; }\r\n\u003c/style\u003e\u003c/head\u003e\u003cbody style=\" font-family:'Lucida Grande'; font-size:10pt; font-weight:400; font-style:normal;\"\u003e\r\n\u003cp style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"\u003eKit de bateria usado por Ian Paice do Deep Purple\u003c/p\u003e\u003c/body\u003e\u003c/html\u003e",
+      "version": 0,
+      "formatVersion": 0,
+      "tags": [],
+      "size": 1054720,
+      "license": "CC BY",
+      "folderName": "Ian Paice",
+      "instruments": 12,
+      "components": 1,
+      "samples": 12,
+      "instrumentTypes": []
+    }
+  ],
+  "hash": "ecb50f72b36ed88fc64c9dba352cfc2b2cebacb35b7408d7ae9454435e3fd34b"
+}
