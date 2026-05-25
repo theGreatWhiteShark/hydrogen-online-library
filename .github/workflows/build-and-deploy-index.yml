@@ -1,0 +1,122 @@
+name: Build and Deploy Library Index
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  LIBRARY_BRANCH: library
+
+jobs:
+  # Build the hydrogen-index tool from the submodule
+  build-indexer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build hydrogen-index
+        run: |
+          cd hydrogen-index
+          go build -o ../hydrogen-index-cli .
+          cd ..
+
+      - name: Upload hydrogen-index-cli artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hydrogen-index-cli
+          path: hydrogen-index-cli
+          retention-days: 1
+
+  # Generate the index.json file with all artifact metadata
+  generate-index:
+    runs-on: ubuntu-latest
+    needs: build-indexer
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Download hydrogen-index-cli artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hydrogen-index-cli
+
+      - name: Make hydrogen-index-cli executable
+        run: chmod +x hydrogen-index-cli
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate index
+        run: |
+          REPO_PATH="${{ github.repository }}"
+          echo "Repository path [${REPO_PATH}]"
+
+          ./hydrogen-index-cli scan \
+            --provider github \
+            --repo "${REPO_PATH}" \
+            --branch "${LIBRARY_BRANCH}" \
+            --output index.json \
+            --exclude hydrogen-index
+
+      - name: Validate generated index
+        run: ./hydrogen-index-cli validate index.json
+
+      - name: Display summary
+        run: |
+          echo "Index generation complete. Summary:"
+          cat index.json | jq '{version, patternCount, songCount, drumkitCount, generatedAt}'
+
+      - name: Upload index.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: index.json
+          path: index.json
+          retention-days: 1
+
+  # Deploy the index.json to the library branch
+  deploy-index:
+    runs-on: ubuntu-latest
+    needs: generate-index
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.LIBRARY_BRANCH }}
+          fetch-depth: 0
+
+      - name: Download index.json artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: index.json
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push index.json
+        run: |
+          git add index.json
+          git commit -m "Update index.json [skip ci]"
+          git push origin HEAD:${{ env.LIBRARY_BRANCH }}
+          echo "Index deployed to ${{ env.LIBRARY_BRANCH }} branch"
+
+      - name: Display permalink
+        run: |
+          PERMALINK="${{ github.server_url }}/${{ github.repository }}/raw/${{ env.LIBRARY_BRANCH }}/index.json"
+          echo "Permalink [${PERMALINK}]"
