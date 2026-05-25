@@ -1,93 +1,202 @@
-# hydrogen-online-library
+# Hydrogen Online Library
 
+A Git-based artifact library for the
+[Hydrogen](https://github.com/hydrogen-music/hydrogen) drum machine. This
+repository is an example for a decentralized, versioned collection of Hydrogen
+artifacts (drumkits, patterns, and songs) with automatic index generation via
+CI/CD. Fork it and add your own artifacts to provide your own, personal online
+library!
 
+## Overview
 
-## Getting started
+This repository serves as a template library using which users can share their
+own Hydrogen artifacts. When artifacts are added to the repository, a GitLab CI
+pipeline automatically:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+1. Scans all `.h2drumkit`, `.h2pattern`, and `.h2song` files (can be located
+   both at top-level and in arbitrary subfolders)
+2. Extracts metadata from each artifact
+3. Generates a structured `index.json` file with permalinks
+4. Deploys the index to a dedicated `library` branch
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Users can then configure their Hydrogen application to consume artifacts from this library using the permalink to the `index.json` file.
 
-## Add your files
+## Supported Artifact Types
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- **`.h2drumkit`** — Hydrogen drumkit archives (tar format containing drumkit.xml)
+- **`.h2pattern`** — Hydrogen pattern files
+- **`.h2song`** — Hydrogen song files
+
+Supports formats as old as Hydrogen version 0.9.3.
+
+## Adding Artifacts
+
+### Prerequisites
+
+**Fork and clone** this repository
+
+### Commit and Push
+
+```bash
+# Add your artifacts
+git add drumkits/your-kit.h2drumkit
+git add patterns/your-pattern.h2pattern
+git add songs/your-song.h2song
+
+# Commit with a descriptive message
+git commit -m "Add acoustic jazz drumkit and basic patterns"
+
+# Push to your fork
+git push origin main
+```
+
+## CI/CD Pipeline
+
+The GitLab CI pipeline automatically processes artifact additions:
+
+### Pipeline Stages
+
+1. **Build** — Compiles the `hydrogen-index` tool from the submodule
+2. **Index** — Scans artifacts and generates `index.json` with metadata and permalinks
+3. **Deploy** — Pushes `index.json` to the `library` branch
+
+### Pipeline Triggers
+
+The pipeline runs automatically on:
+- Pushes to `main` or `master` branches
+- Merge requests that are merged into `main` or `master`
+
+### Generated Index
+
+The `index.json` file contains:
+
+- **Metadata** for each artifact (name, author, license, version, etc.)
+- **SHA-256 hashes** for integrity verification
+- **Permalinks** to each artifact in the GitLab repository
+- **Self-hash** of the index file for validation
+
+Example structure:
+
+```json
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-05-25T12:00:00Z",
+  "patternCount": 5,
+  "songCount": 2,
+  "drumkitCount": 3,
+  "artifacts": [
+    {
+      "type": "drumkit",
+      "name": "TR808EmulationKit",
+      "path": "drumkits/TR808EmulationKit.h2drumkit",
+      "permalink": "https://gitlab.com/namespace/repo/-/raw/library/drumkits/TR808EmulationKit.h2drumkit",
+      "sha256": "abc123...",
+      "metadata": { ... }
+    }
+  ]
+}
+```
+
+## Consuming the Library
+
+### Getting the Index Permalink
+
+After your artifacts are merged, the `index.json` is available at:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/theGreatWhiteShark/hydrogen-online-library.git
-git branch -M main
-git push -uf origin main
+https://gitlab.com/<namespace>/<repository>/-/raw/library/index.json
 ```
 
-## Integrate with your tools
+Replace `<namespace>` and `<repository>` with your project's path.
 
-* [Set up project integrations](https://gitlab.com/theGreatWhiteShark/hydrogen-online-library/-/settings/integrations)
+### Configuring Hydrogen
 
-## Collaborate with your team
+In the `Hydrogen` application, add the library permalink:
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+1. Open an "Online Import" dialog
+2. Hit the "Sources" button and select "Add Source"
+3. Add a new library with the permalink to `index.json`
+4. Hydrogen will now be able to browse and download artifacts from this library
 
-## Test and Deploy
+### Example Permalink
 
-Use the built-in continuous integration in GitLab.
+For this repository, the index is available at:
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+```
+https://gitlab.com/theGreatWhiteShark/hydrogen-online-library/-/raw/library/index.json
+```
 
-***
+## Local Development
 
-# Editing this README
+### Building the Index Locally
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+To generate the index locally without running the full CI pipeline:
 
-## Suggestions for a good README
+```bash
+# Ensure the submodule is checked out
+git submodule update --init --recursive
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# Build the hydrogen-index tool
+cd hydrogen-index
+go build -o ../hydrogen-index .
+cd ..
 
-## Name
-Choose a self-explaining name for your project.
+# Generate the index (GitLab permalinks)
+./hydrogen-index scan \
+  --provider gitlab \
+  --repo theGreatWhiteShark/hydrogen-online-library \
+  --branch library \
+  --output index.json \
+  --exclude hydrogen-index
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# Validate the generated index
+./hydrogen-index validate index.json
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## Troubleshooting
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Pipeline Failures
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+If the CI pipeline fails:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+1. Check the pipeline logs in GitLab
+2. Verify artifact files are valid Hydrogen formats
+3. Ensure the submodule is properly initialized
+4. Check for XML parsing errors in artifact metadata
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Index Not Updating
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+If the `library` branch doesn't update:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+1. Verify the pipeline completed successfully
+2. Check that changes were pushed to `main` or `master`
+3. Ensure the `deploy-index` job has proper Git permissions
+4. Review the deploy job logs for authentication errors
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### Invalid Artifacts
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+If artifacts fail to parse:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. Open the artifact in Hydrogen to verify it's valid
+2. Check XML syntax in drumkit.xml files
+3. Ensure all referenced samples exist in drumkit archives
+4. Validate format version is supported (>=0.9.3)
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This repository is licensed under GPLv3, consistent with the Hydrogen project.
+
+Individual artifacts may have different licenses as specified in their metadata.
+
+## Links
+
+- [Hydrogen Drum Machine](https://github.com/hydrogen-music/hydrogen)
+- [hydrogen-index Tool](https://github.com/hydrogen-music/hydrogen-index)
+- [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/)
+
+## Support
+
+For issues or questions:
+- Open an issue in this repository or [hydrogen-index](https://github.com/hydrogen-music/hydrogen-index)
+- Check the [Hydrogen forum](https://github.com/hydrogen-music/hydrogen/discussions)
+- Review the hydrogen-index documentation

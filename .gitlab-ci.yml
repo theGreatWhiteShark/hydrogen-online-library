@@ -1,0 +1,90 @@
+stages:
+  - build
+  - index
+  - deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_UPDATE_FLAGS: --remote --merge
+  LIBRARY_BRANCH: library
+
+# Build the hydrogen-index tool from the submodule
+build-indexer:
+  stage: build
+  image: golang:1.26
+  script:
+    - cd hydrogen-index
+    - go build -o ../hydrogen-index-cli .
+    - cd ..
+  artifacts:
+    paths:
+      - hydrogen-index-cli
+    expire_in: 1 hour
+
+# Generate the index.json file with all artifact metadata
+generate-index:
+  stage: index
+  image: golang:1.26
+  needs:
+    - build-indexer
+  before_script:
+    - apt update && apt install -y jq
+  script:
+    # Get the repository path in GitLab format (namespace/project)
+    - REPO_PATH="${CI_PROJECT_PATH}"
+    - echo "Repository path [${REPO_PATH}]"
+
+    # Run hydrogen-index to scan artifacts and generate index.json
+    # The tool will auto-detect the git root and scan for .h2drumkit, .h2pattern, .h2song files
+    - ./hydrogen-index-cli scan \
+        --provider gitlab \
+        --repo "${REPO_PATH}" \
+        --branch "${LIBRARY_BRANCH}" \
+        --output index.json \
+        --exclude hydrogen-index
+
+    # Validate the generated index
+    - ./hydrogen-index-cli validate index.json
+
+    # Display summary
+    - echo "Index generation complete. Summary:"
+    - cat index.json | jq '{version, patternCount, songCount, drumkitCount, generatedAt}'
+  artifacts:
+    paths:
+      - index.json
+    expire_in: 1 hour
+
+# Deploy the index.json to the library branch
+deploy-index:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - generate-index
+  before_script:
+    # Install git and configure
+    - apk add --no-cache git
+    - git config --global user.email "$GITLAB_USER_EMAIL"
+    - git config --global user.name "$GITLAB_USER_NAME"
+    - git config --global http.sslVerify false
+  script:
+    # Clone the repository with the library branch
+    - git clone --depth 1 --branch "${LIBRARY_BRANCH}" "${CI_REPOSITORY_URL}" deploy-repo || git clone --depth 1 "${CI_REPOSITORY_URL}" deploy-repo
+
+    - cd deploy-repo
+
+    # If library branch doesn't exist, create it
+    - git checkout "${LIBRARY_BRANCH}" 2>/dev/null || git checkout -b "${LIBRARY_BRANCH}"
+
+    # Copy the generated index.json
+    - cp ../index.json .
+
+    # Commit and push the changes
+    - git add index.json
+    - git commit -m "Update index.json [skip ci]" || echo "No changes to commit"
+    - git push origin "${LIBRARY_BRANCH}"
+
+    - echo "Index deployed to ${LIBRARY_BRANCH} branch"
+    - echo "Permalink [${CI_PROJECT_URL}/-/raw/${LIBRARY_BRANCH}/index.json]"
+  only:
+    - main
+    - master
