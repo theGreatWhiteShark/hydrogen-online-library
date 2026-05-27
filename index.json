@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "created": "2026-05-25T17:19:59",
+  "created": "2026-05-27T16:43:47",
   "patternCount": 1,
   "songCount": 1,
   "drumkitCount": 1,
@@ -60,10 +60,10 @@
       "license": "CC BY",
       "folderName": "Ian Paice",
       "instruments": 12,
-      "components": 1,
+      "components": 12,
       "samples": 12,
       "instrumentTypes": []
     }
   ],
-  "hash": "ecb50f72b36ed88fc64c9dba352cfc2b2cebacb35b7408d7ae9454435e3fd34b"
+  "hash": "a969b1555a157fe2ccbdcf57af63ab6d3a447172f0e944ae5f47a347d00047be"
 }
